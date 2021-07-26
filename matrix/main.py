@@ -11,69 +11,92 @@
 #
 from PIL import Image,ImageColor
 
-def test():
-    # print(ImageColor.getrgb('#00000000'))
-    tar = r'./test/test.png'
-    img = Image.open(tar)
-    # img.resize((img.width*2,img.height*2), Image.ANTIALIAS).save(f'./test_ANTIALIAS.png')
-    # img.resize((img.width*2,img.height*2), Image.BILINEAR).save(f'./test_BILINEAR.png')
-    # img.resize((img.width*2,img.height*2), Image.BICUBIC).save(f'./test_BICUBIC.png')
-    # img.resize((img.width*2,img.height*2), Image.NEAREST).save(f'./test_NEAREST.png')
-    # img.resize((img.width*2,img.height*2), Image.LANCZOS).save(f'./test_LANCZOS.png')
+def test(tar = r'./test/test.png'):
+    # xy={
+    #     'left_top':[0, 0],
+    #     'right_top':[img.width, 0],
+    #     'right_down':[img.width -150, img.height-150],
+    #     'left_down':[0, img.height-99]
+    # }
 
-    M = Matrix()
-    res = M.draw(tar,{
-        'left_top':[150, 150],
-        'right_top':[img.width, 0],
-        'right_down':[img.width-150, img.height-150],
-        'left_down':[0, img.height-99]
-        })
-
-    res.show()
-
+    xy={ 'left_top':[50, -50] }
+    Matrix(tar).config(xy=xy, mode='relative').draw().show()
 
 class Matrix(object):
-    def __init__(self, mode='absolute'):
-        self.img = None
+    def __init__(self, img, mode='absolute'):
         self.mode = mode # absolute | relative 相对坐标或者绝对坐标
-        self.transformImg = None
+        self.transform_img = None
 
-
-    def draw(self, img, xy=None):
+        self.xy_list = []
         self.img = Image.open(img).convert('RGBA')
-        img_w, img_h = self.img.width, self.img.height
+        self.xy_obj = {
+            'left_top':[0, 0],
+            'right_top':[self.img.width, 0],
+            'right_down':[self.img.width, self.img.height],
+            'left_down':[0, self.img.height]
+        }
 
-        # 创建透明图层左背景
-        bg = Image.new(size=self.img.size, color=(0,0,0,0), mode='RGBA')
+    def config(self, xy=None, mode=None):
+        if mode:
+            self.mode = mode
 
+        if xy:
+            self.xy_obj.update(xy)
+            self.xy_list = self.convertXY(xy)
+
+        return self
+
+    def result(self):
+        return self.transform_img
+
+
+    def show(self):
+        if self.transform_img : self.transform_img.show()
+        return self
+
+    def draw(self):
         # 配置背景矩阵范围
-        bg_range = [(0,0), (bg.width, 0), (bg.width, bg.height), (0, bg.height)]
+        bg_range = [(0,0), (self.img.width, 0), (self.img.width, self.img.height), (0, self.img.height)]
 
-        # 拼接参数作为仿射计算函数的入参
-        nxy = self.convertXY(xy)
+        # # 拼接参数作为仿射计算函数的入参
+        transform = self.PerspectiveTransform(bg_range, self.xy_list)
 
-        transform = self.PerspectiveTransform(bg_range, nxy)
-
-        new_img = self.img.transform(
+        self.transform_img = self.img.transform(
             size=self.img.size,
             method=Image.PERSPECTIVE,
             data=transform,
-            resample=Image.NEAREST,
-            )
+            resample=Image.NEAREST)
+
+        return self
 
 
-        return new_img
-
-
+    """
+    : Description 将四点坐标转换为数组，然后使用np更好的计算仿射
+    :
+    : param  self:{type}  {description}
+    : param  xy:{type}    {description}
+    :
+    : returns {} {description}
+    :
+    """
     def convertXY(self, xy):
+        # print('xy: ',xy)
         if isinstance(xy, dict):
-            if self.mode == 'absolute': return [xy['left_top'], xy['right_top'], xy['right_down'], xy['left_down']]
-            if self.mode == 'relative': return [
-                xy['left_top'],
-                (self.img.width - xy['right_top'][0], xy['right_top'][1]),
-                (self.img.width - xy['right_down'][0] ,self.img.height - ['right_down'][1]),
-                (xy['left_down'][0], self.height - xy['left_down'][1])
-            ]
+            if self.mode == 'absolute': return [self.xy_obj['left_top'], self.xy_obj['right_top'], self.xy_obj['right_down'], self.xy_obj['left_down']]
+            if self.mode == 'relative':
+                nxy = {
+                    'left_top':[0, 0],
+                    'right_top':[0, 0],
+                    'right_down':[0, 0],
+                    'left_down':[0, 0]
+                }
+                nxy.update(xy)
+                return [
+                    nxy['left_top'],
+                    (self.img.width + nxy['right_top'][0], nxy['right_top'][1]),
+                    (self.img.width + nxy['right_down'][0] , self.img.height + nxy['right_down'][1]),
+                    (nxy['left_down'][0], self.img.height + nxy['left_down'][1])
+                ]
 
         # 返回测试坐标
         return [[50, 50], [250, 250], [300, 300], [50, 350]]
@@ -94,11 +117,16 @@ class Matrix(object):
         for p1, p2 in zip(front_xy, background_xy):
             matrix.append([p1[0], p1[1], 1, 0, 0, 0, -p2[0] * p1[0], -p2[0] * p1[1]])
             matrix.append([0, 0, 0, p1[0], p1[1], 1, -p2[1] * p1[0], -p2[1] * p1[1]])
-        A = np.matrix(matrix, dtype=np.float)
+        A = np.matrix(matrix, dtype=np.float64)
         B = np.array(background_xy).reshape(8)
         res = np.dot(np.linalg.inv(A.T * A) * A.T, B)
         return np.array(res).reshape(8)
 
 if ( __name__ == "__main__"):
     test()
+else:
+    # 接收参数
+    import sys
+    all_pamas = sys.argv
+
 
