@@ -12,17 +12,17 @@
 from PIL import Image,ImageColor
 
 def test(tar = r'./test/test.png'):
-    # xy={
-    #     'left_top':[0, 0],
-    #     'right_top':[img.width, 0],
-    #     'right_down':[img.width -150, img.height-150],
-    #     'left_down':[0, img.height-99]
-    # }
-
-    xy={ 'left_top':[50, -50] }
+    xy={ 'left_top':[50, 150] }
     Matrix(tar).config(xy=xy, mode='relative').draw().show()
 
 class Matrix(object):
+    relative_xy_template = {
+        'left_top':[0, 0],
+        'right_top':[0, 0],
+        'right_down':[0, 0],
+        'left_down':[0, 0]
+    }
+
     def __init__(self, img, mode='absolute'):
         self.mode = mode # absolute | relative 相对坐标或者绝对坐标
         self.transform_img = None
@@ -41,7 +41,7 @@ class Matrix(object):
             self.mode = mode
 
         if xy:
-            self.xy_obj.update(xy)
+
             self.xy_list = self.convertXY(xy)
 
         return self
@@ -49,6 +49,8 @@ class Matrix(object):
     def result(self):
         return self.transform_img
 
+    def save(self, output):
+        self.transform_img.save(output)
 
     def show(self):
         if self.transform_img : self.transform_img.show()
@@ -80,16 +82,13 @@ class Matrix(object):
     :
     """
     def convertXY(self, xy):
-        # print('xy: ',xy)
         if isinstance(xy, dict):
-            if self.mode == 'absolute': return [self.xy_obj['left_top'], self.xy_obj['right_top'], self.xy_obj['right_down'], self.xy_obj['left_down']]
+            if self.mode == 'absolute':
+                self.xy_obj.update(xy)
+                return [self.xy_obj['left_top'], self.xy_obj['right_top'], self.xy_obj['right_down'], self.xy_obj['left_down']]
             if self.mode == 'relative':
-                nxy = {
-                    'left_top':[0, 0],
-                    'right_top':[0, 0],
-                    'right_down':[0, 0],
-                    'left_down':[0, 0]
-                }
+                # 使用更新对象的方式，入参不用每个位置都输入坐标，更自由
+                nxy = Matrix.relative_xy_template
                 nxy.update(xy)
                 return [
                     nxy['left_top'],
