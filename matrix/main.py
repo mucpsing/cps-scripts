@@ -10,10 +10,24 @@
 # @Description: 功能描述
 #
 from PIL import Image,ImageColor
+from typing import Union, TypeVar, List
 
-def test(tar = r'./test/test.png'):
+import typing
+
+# print(dir(typing))
+
+def test(tar:str = r'./test/test.png') -> None:
     xy={ 'left_top':[50, 150] }
     Matrix(tar).config(xy=xy, mode='relative').draw().show()
+
+# xy_item = TypeVar('xy', int, float)
+# xy_type = List[xy_item,xy_item]
+
+# # class XY(TypedDict):
+# #     left_top:xy_type
+# #     right_top:xy_type
+# #     right_down:xy_type
+# #     left_down:xy_type
 
 class Matrix(object):
     relative_xy_template = {
@@ -23,20 +37,20 @@ class Matrix(object):
         'left_down':[0, 0]
     }
 
-    def __init__(self, img, mode='absolute'):
-        self.mode = mode # absolute | relative 相对坐标或者绝对坐标
-        self.transform_img = None
+    def __init__(self, img:str, mode:str='absolute'):
+        self.mode:str = mode # absolute | relative 相对坐标或者绝对坐标
+        self.transform_img:object = None
 
-        self.xy_list = []
-        self.img = Image.open(img).convert('RGBA')
-        self.xy_obj = {
+        self.xy_list:list = []
+        self.img:object = Image.open(img).convert('RGBA')
+        self.xy_obj:dict = {
             'left_top':[0, 0],
             'right_top':[self.img.width, 0],
             'right_down':[self.img.width, self.img.height],
             'left_down':[0, self.img.height]
         }
 
-    def config(self, xy=None, mode=None):
+    def config(self, xy:dict=None, mode:str=None) -> object:
         if mode:
             self.mode = mode
 
@@ -46,10 +60,10 @@ class Matrix(object):
 
         return self
 
-    def result(self):
+    def result(self) -> object:
         return self.transform_img
 
-    def save(self, output):
+    def save(self, output:str) -> None:
         self.transform_img.save(output)
 
     def show(self):
@@ -81,7 +95,7 @@ class Matrix(object):
     : returns {} {description}
     :
     """
-    def convertXY(self, xy):
+    def convertXY(self, xy:dict) -> list:
         if isinstance(xy, dict):
             if self.mode == 'absolute':
                 self.xy_obj.update(xy)
@@ -98,7 +112,7 @@ class Matrix(object):
                 ]
 
         # 返回测试坐标
-        return [[50, 50], [250, 250], [300, 300], [50, 350]]
+        return [(50, 50), (250, 250), (300, 300), (50, 350)]
 
     """
     : Description 坐标点顺序： [left_top, right_top, right_down, left_down]
@@ -110,7 +124,7 @@ class Matrix(object):
     :
     """
     @staticmethod
-    def PerspectiveTransform(background_xy, front_xy):
+    def PerspectiveTransform(background_xy:list, front_xy:list) -> list:
         import numpy as np
         matrix=[]
         for p1, p2 in zip(front_xy, background_xy):
