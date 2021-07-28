@@ -1,0 +1,64 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+Dfs0	.\mikepy\core\mikepy.py	/^from mikeio import Dfsu,Dfs0,Mesh$/;"	i
+Dfsu	.\mikepy\core\mikepy.py	/^from mikeio import Dfsu,Dfs0,Mesh$/;"	i
+Grid2D	.\mikepy\core\mikepy.py	/^from mikeio.spatial import Grid2D$/;"	i
+Image	.\matrix\main.py	/^from PIL import Image,ImageColor$/;"	i
+ImageColor	.\matrix\main.py	/^from PIL import Image,ImageColor$/;"	i
+List	.\matrix\main.py	/^from typing import Union, TypeVar, List$/;"	i
+M	.\mikepy\main.py	/^M=MikeIo()$/;"	v
+M	.\mikepy\main.py	/^M=None$/;"	v
+Matrix	.\matrix\main.py	/^class Matrix(object):$/;"	c
+Mesh	.\mikepy\core\mikepy.py	/^from mikeio import Dfsu,Dfs0,Mesh$/;"	i
+MikeIo	.\mikepy\core\mikepy.py	/^class MikeIo(object):$/;"	c
+MikeIo	.\mikepy\main.py	/^from core.mikepy import MikeIo$/;"	i
+Path	.\mikepy\main.py	/^from pathlib import Path$/;"	i
+PerspectiveTransform	.\matrix\main.py	/^    def PerspectiveTransform(background_xy:list, front_xy:list) -> list:$/;"	m	class:Matrix
+TemporaryDirectory	.\mikepy\core\mikepy.py	/^from tempfile import TemporaryFile,TemporaryDirectory$/;"	i
+TemporaryFile	.\mikepy\core\mikepy.py	/^from tempfile import TemporaryFile,TemporaryDirectory$/;"	i
+TypeVar	.\matrix\main.py	/^from typing import Union, TypeVar, List$/;"	i
+Union	.\matrix\main.py	/^from typing import Union, TypeVar, List$/;"	i
+__init__	.\matrix\main.py	/^    def __init__(self, img:str, mode:str='absolute'):$/;"	m	class:Matrix
+__init__	.\mikepy\core\mikepy.py	/^    def __init__(self):$/;"	m	class:MikeIo
+__len__	.\mikepy\core\mikepy.py	/^    def __len__(self):$/;"	m	class:MikeIo	file:
+__str__	.\mikepy\core\mikepy.py	/^    def __str__(self):$/;"	m	class:MikeIo	file:
+all_pamas	.\matrix\main.py	/^    all_pamas = sys.argv$/;"	v	class:Matrix
+check_data	.\mikepy\core\mikepy.py	/^    def check_data(self, data, fix=True, tip=True):$/;"	m	class:MikeIo
+clean	.\mikepy\core\mikepy.py	/^    def clean(self):$/;"	m	class:MikeIo
+config	.\matrix\main.py	/^    def config(self, xy:dict=None, mode:str=None) -> object:$/;"	m	class:Matrix
+convertXY	.\matrix\main.py	/^    def convertXY(self, xy:dict) -> list:$/;"	m	class:Matrix
+copy2	.\mikepy\core\mikepy.py	/^from shutil import copy2$/;"	i
+create_tmp_file	.\mikepy\core\mikepy.py	/^    def create_tmp_file(self, filename):$/;"	m	class:MikeIo
+draw	.\matrix\main.py	/^    def draw(self):$/;"	m	class:Matrix
+get_dfsu_data	.\mikepy\core\mikepy.py	/^    def get_dfsu_data(self, item, setp):$/;"	m	class:MikeIo
+get_dfsu_direction	.\mikepy\core\mikepy.py	/^    def get_dfsu_direction(self, setp):$/;"	m	class:MikeIo
+get_dfsu_speed	.\mikepy\core\mikepy.py	/^    def get_dfsu_speed(self, setp):$/;"	m	class:MikeIo
+get_mesh_data	.\mikepy\core\mikepy.py	/^    def get_mesh_data(self, dfs):$/;"	m	class:MikeIo
+io	.\mikepy\core\mikepy.py	/^import time, os, io$/;"	i
+main	.\mikepy\main.py	/^def main(d=r'.\/'):$/;"	f
+matplotlib	.\mikepy\core\mikepy.py	/^import matplotlib.pyplot as plt$/;"	i
+md5	.\mikepy\core\mikepy.py	/^from hashlib import md5$/;"	i
+np	.\matrix\main.py	/^        import numpy as np$/;"	i
+np	.\mikepy\core\mikepy.py	/^import numpy as np$/;"	i
+os	.\mikepy\core\mikepy.py	/^import time, os, io$/;"	i
+os	.\mikepy\main.py	/^import os$/;"	i
+pd	.\mikepy\core\mikepy.py	/^import pandas as pd$/;"	i
+plt	.\mikepy\core\mikepy.py	/^import matplotlib.pyplot as plt$/;"	i
+read	.\mikepy\core\mikepy.py	/^    def read(self, filename, item="", title="", setp=-1):$/;"	m	class:MikeIo
+relative_xy_template	.\matrix\main.py	/^    relative_xy_template = {$/;"	v	class:Matrix
+result	.\matrix\main.py	/^    def result(self) -> object:$/;"	m	class:Matrix
+save	.\matrix\main.py	/^    def save(self, output:str) -> None:$/;"	m	class:Matrix
+save	.\mikepy\core\mikepy.py	/^    def save(self, filename='.\/output.xls'):$/;"	m	class:MikeIo
+save_excel	.\mikepy\core\mikepy.py	/^    def save_excel(self, filename):$/;"	m	class:MikeIo
+show	.\matrix\main.py	/^    def show(self):$/;"	m	class:Matrix
+start	.\noteBooks.bat	/^:start-notebook$/;"	l
+sub	.\mikepy\core\mikepy.py	/^    def sub(self, target1, target2, title=""):$/;"	m	class:MikeIo
+sys	.\matrix\main.py	/^    import sys$/;"	i
+test	.\matrix\main.py	/^def test(tar:str = r'.\/test\/test.png') -> None:$/;"	f
+test	.\mikepy\main.py	/^def test(tar = r'.\/data'):$/;"	f
+time	.\mikepy\core\mikepy.py	/^import time, os, io$/;"	i
+typing	.\matrix\main.py	/^import typing$/;"	i

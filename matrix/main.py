@@ -20,17 +20,17 @@ def test(tar:str = r'./test/test.png') -> None:
     xy={ 'left_top':[50, 150] }
     Matrix(tar).config(xy=xy, mode='relative').draw().show()
 
-# xy_item = TypeVar('xy', int, float)
-# xy_type = List[xy_item,xy_item]
+xy_item = List[TypeVar('xy_item', int, float)]
+xy_type = List[List[xy_item]]
 
-# # class XY(TypedDict):
-# #     left_top:xy_type
-# #     right_top:xy_type
-# #     right_down:xy_type
-# #     left_down:xy_type
+class XY_OBJ():
+    left_top:xy_type
+    right_top:xy_type
+    right_down:xy_type
+    left_down:xy_type
 
 class Matrix(object):
-    relative_xy_template = {
+    relative_xy_template:XY_OBJ = {
         'left_top':[0, 0],
         'right_top':[0, 0],
         'right_down':[0, 0],
@@ -43,7 +43,7 @@ class Matrix(object):
 
         self.xy_list:list = []
         self.img:object = Image.open(img).convert('RGBA')
-        self.xy_obj:dict = {
+        self.xy_obj:XY_OBJ = {
             'left_top':[0, 0],
             'right_top':[self.img.width, 0],
             'right_down':[self.img.width, self.img.height],
