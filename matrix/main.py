@@ -9,10 +9,8 @@
 # @Filename "main.py"
 # @Description: 功能描述
 #
-from PIL import Image,ImageColor
-from typing import Union, TypeVar, List
-
-import typing
+from PIL import Image
+from typing import Dict, List, Union
 
 # print(dir(typing))
 
@@ -23,11 +21,11 @@ def test(tar:str = r'./test/test.png') -> None:
 # xy_item = TypeVar('xy', int, float)
 # xy_type = List[xy_item,xy_item]
 
-# # class XY(TypedDict):
-# #     left_top:xy_type
-# #     right_top:xy_type
-# #     right_down:xy_type
-# #     left_down:xy_type
+# class XY(TypedDict):
+#     left_top:xy_type
+#     right_top:xy_type
+#     right_down:xy_type
+#     left_down:xy_type
 
 class Matrix(object):
     relative_xy_template = {
@@ -39,7 +37,7 @@ class Matrix(object):
 
     def __init__(self, img:str, mode:str='absolute'):
         self.mode:str = mode # absolute | relative 相对坐标或者绝对坐标
-        self.transform_img:object = None
+        self.transform_img = None
 
         self.xy_list:list = []
         self.img:object = Image.open(img).convert('RGBA')
@@ -64,13 +62,14 @@ class Matrix(object):
         return self.transform_img
 
     def save(self, output:str) -> None:
-        self.transform_img.save(output)
+        # self.transform_img.save(output)
+        pass
 
     def show(self):
         if self.transform_img : self.transform_img.show()
         return self
 
-    def draw(self):
+    def draw(self) -> object:
         # 配置背景矩阵范围
         bg_range = [(0,0), (self.img.width, 0), (self.img.width, self.img.height), (0, self.img.height)]
 
@@ -120,7 +119,7 @@ class Matrix(object):
     : param  background_xy:{list}  背景原尺寸的四角坐标，[(0, 0), (img_width, 0), (img_width, img_height), (0, img_height)]
     : param  front_xy:{list}       需要仿射的新坐标，    [[95, 134], [95, 134], [195, 209], [195, 209]]
     :
-    : returns {narray} 二维数据，每一维带8个元素
+    : returns {list} 二维数据，每一维带8个元素
     :
     """
     @staticmethod
