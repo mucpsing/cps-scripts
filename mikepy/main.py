@@ -10,13 +10,11 @@
 # @Description: 功能描述 - 读取 dfsu文件，输出指定的数据为xls
 #
 
-import os
-
 from core.mikepy import MikeIo
 from pathlib import Path
 
 
-def main(d=r'./'):
+def main(d:str=r'./') -> None:
     p = Path(d)
 
     # 遍历目录，找出dfsu文件
@@ -30,7 +28,7 @@ def main(d=r'./'):
     M.clean()
 
 
-def test(tar = r'./data'):
+def test(tar:str = r'./data') -> None:
     global M
     p = Path(tar)
     for each in p.glob('*.dfsu'):
@@ -47,4 +45,11 @@ M=None
 M=MikeIo()
 if ( __name__ == "__main__"):
     # main(tar)
-    test()
+    import pandas as pd
+
+    xyz = pd.read_table('./data/流速范围.xyz', header=None, sep='\s+')
+
+    print(xyz)
+
+    print(type(xyz))
+
