@@ -1,3 +1,4 @@
+chcp 65001
 ::git add ./server/*
 ::git add ./admin/*
 

@@ -10,7 +10,7 @@
 # @Description: 功能描述
 #
 
-import time, os, io
+import time, os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,19 +43,21 @@ class MikeIo(object):
     def __str__(self):
         return f"当前已处理 {len(self.file_list)} 个文件： {[*self.file_list]}"
 
+    def read_with_xy(self, dirname:str, item:str, setp:int=-1):
+        pass
 
-    """
-    : Description获取 指定类型、时间步长的对应数据
-    :
-    : param  target:{type}   文件名，绝对路径
-    : param  item:{string}   需要提取的数据类型 Current direction | Current speed | U velocity | V velocity | ...
-    : param  title:{string}  属性最终的列名
-    : param  setp:{int}      需要获取的步长，默认是最后一个时间
-    :
-    : returns { narray } {description}
-    :
-    """
-    def read(self, filename, item="", title="", setp=-1):
+    def read(self, filename, item="", title="", setp=-1, sheet_name:str=""):
+        """
+        Description 获取指定类型、时间步长的对应数据
+
+        - param  target :{type}   文件名，绝对路径
+        - param  item :{string}   需要提取的数据类型|Current_direction|Current_speed|U_velocity|V_velocity|...
+        - param  title :{string}  属性最终的列名
+        - param  setp :{int}      需要获取的步长，默认是最后一个时间
+
+        returns { narray } {description}
+
+        """
         name,ext = os.path.basename(filename).split('.')
         if ext == 'dfsu':
             # 防止重复读取同一文件
@@ -74,13 +76,14 @@ class MikeIo(object):
             # 通过self.dfsu 读取数据
             data = self.get_dfsu_data(item=item, setp=setp)
 
-            # 名字太长，无法生成shp头部字段
-            sheet_name = f'mesh_{len(data)}'
+            # 如果没有指定sheet_name，将以要提取的数据来命名
+            if sheet_name == "":
+                sheet_name = f'mesh_{len(data)}'
 
             # 读取 X Y 数据
             if not sheet_name in self.data:
                 self.data[sheet_name] = []
-                self.get_mesh_data(self.dfsu)
+                self.get_xy_by_mesh(self.dfsu)
 
             self.data[sheet_name].append({
                 "column_name":f'{title}_{name}',
@@ -111,13 +114,18 @@ class MikeIo(object):
 
         return tmp_file
 
+    def get_xy_by_xyz(self, xyz_file:str):
+        if not os.path.exists(xyz_file): return
+
+        self.xy = pd.read_table
+
     """
     : Description 获取文件的X，Y，
     :
     : returns { narray } {description}
     :
     """
-    def get_mesh_data(self, dfs):
+    def get_xy_by_mesh(self, dfs):
         # 实例化网格
         # 获取网格内的数据[col1, col2, col3,...]
         if not dfs:
@@ -234,22 +242,33 @@ class MikeIo(object):
     :
     """
     def sub(self, target1, target2, title=""):
+        """
+        Description {description}
+
+        - param self    :{params} {description}1
+        - param target1 :{params} {description}
+        - param target2 :{params} {description}
+        - param title   :{string} {description}
+
+        returns `{}` {description}
+
+        """
         # sub = np.round(self.result[target1] - self.result[target2], 3)
         sub = []
         return sub
 
-    """
-    : Description 检查数据是否完整，有时候有的结果会存在undefined，在np内表示为nan格式
-    :
-    : param  self:{type}  {description}
-    : param  data:{list|narray}  {description}
-    : param  fix:{list|narray}  是否修复为 0
-    : param  tip:{list|narray}  是否打印出提示信息
-    :
-    : returns { input } {description}
-    :
-    """
     def check_data(self, data, fix=True, tip=True):
+        """
+        Description {description}
+
+        - param self :{params} {description}
+        - param data :{params} {description}
+        - param fix  :{bool}   是否修复为0
+        - param tip  :{bool}   是否打印出提示信息
+
+        returns `{}` {description}
+
+        """
         name, ext = os.path.basename(self.currt_file).split('.')
         for index, each in enumerate(data):
             if not np.isnan(each): continue

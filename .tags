@@ -22,6 +22,7 @@ TemporaryDirectory	.\mikepy\core\mikepy.py	/^from tempfile import TemporaryFile,
 TemporaryFile	.\mikepy\core\mikepy.py	/^from tempfile import TemporaryFile,TemporaryDirectory$/;"	i
 TypeVar	.\matrix\main.py	/^from typing import Union, TypeVar, List$/;"	i
 Union	.\matrix\main.py	/^from typing import Union, TypeVar, List$/;"	i
+XY_OBJ	.\matrix\main.py	/^class XY_OBJ():$/;"	c
 __init__	.\matrix\main.py	/^    def __init__(self, img:str, mode:str='absolute'):$/;"	m	class:Matrix
 __init__	.\mikepy\core\mikepy.py	/^    def __init__(self):$/;"	m	class:MikeIo
 __len__	.\mikepy\core\mikepy.py	/^    def __len__(self):$/;"	m	class:MikeIo	file:
@@ -49,7 +50,6 @@ os	.\mikepy\main.py	/^import os$/;"	i
 pd	.\mikepy\core\mikepy.py	/^import pandas as pd$/;"	i
 plt	.\mikepy\core\mikepy.py	/^import matplotlib.pyplot as plt$/;"	i
 read	.\mikepy\core\mikepy.py	/^    def read(self, filename, item="", title="", setp=-1):$/;"	m	class:MikeIo
-relative_xy_template	.\matrix\main.py	/^    relative_xy_template = {$/;"	v	class:Matrix
 result	.\matrix\main.py	/^    def result(self) -> object:$/;"	m	class:Matrix
 save	.\matrix\main.py	/^    def save(self, output:str) -> None:$/;"	m	class:Matrix
 save	.\mikepy\core\mikepy.py	/^    def save(self, filename='.\/output.xls'):$/;"	m	class:MikeIo
@@ -62,3 +62,5 @@ test	.\matrix\main.py	/^def test(tar:str = r'.\/test\/test.png') -> None:$/;"	f
 test	.\mikepy\main.py	/^def test(tar = r'.\/data'):$/;"	f
 time	.\mikepy\core\mikepy.py	/^import time, os, io$/;"	i
 typing	.\matrix\main.py	/^import typing$/;"	i
+xy_item	.\matrix\main.py	/^xy_item = List[TypeVar('xy_item', int, float)]$/;"	v
+xy_type	.\matrix\main.py	/^xy_type = List[List[xy_item]]$/;"	v
