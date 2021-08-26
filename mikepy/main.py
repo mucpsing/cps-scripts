@@ -44,12 +44,46 @@ def test(tar:str = r'./data') -> None:
 M=None
 M=MikeIo()
 if ( __name__ == "__main__"):
-    # main(tar)
-    import pandas as pd
+    from os import path
 
-    xyz = pd.read_table('./data/流速范围.xyz', header=None, sep='\s+')
+    BE20 = './data/BE-20.xyz'
+    north200 = './data/sg-north-20.xyz'
+    soutu200 = './data/south200.xyz'
 
-    print(xyz)
+    tar1 = "./data/AF100.dfsu"
+    tar2 = "./data/north100.dfsu"
 
-    print(type(xyz))
 
+
+    M.set_xy(BE20)
+    # M.read(tar1, item="Current speed", column_name='AF100', sheet_name='s1')
+    # M.read(tar2, item="Current speed", column_name='north100', sheet_name='s1')
+    # M.sub('north100','AF100', sheet_name="s1", column_name="north100_C")
+    # M.save('./data/test.xls')
+
+    sheet_name = "s1"
+    item = "Current direction"
+    p = Path('./data/')
+    for each in p.glob('*.dfsu'):
+        column_name,ext = path.basename(each.resolve()).split('.')
+        M.read(each.resolve(), item="Current speed", column_name=column_name, sheet_name=sheet_name)
+        # M.read(each.resolve(), item="Current direction", column_name=column_name, sheet_name=sheet_name)
+
+    M.sub('AF20','BE-20', sheet_name=sheet_name, column_name="C20")
+    M.sub('sg-north-20','BE-20', sheet_name=sheet_name, column_name="north_C20")
+    M.sub('sg-south-20','BE-20', sheet_name=sheet_name, column_name="south_C20")
+
+    M.sub('BE-YX50','AF50', sheet_name=sheet_name, column_name="C50")
+    M.sub('north50','AF50', sheet_name=sheet_name, column_name="north_C50")
+    M.sub('sg-south-50','AF50', sheet_name=sheet_name, column_name="south_C50")
+
+    M.sub('be100','AF100', sheet_name=sheet_name, column_name="C100")
+    M.sub('north100','AF100', sheet_name=sheet_name, column_name="north_C100")
+    M.sub('sg-south-100','AF100', sheet_name=sheet_name, column_name="south_C100")
+
+    M.sub('BE-200','AF200', sheet_name=sheet_name, column_name="C200")
+    M.sub('north200','AF200', sheet_name=sheet_name, column_name="north_C200")
+    M.sub('south200','AF200', sheet_name=sheet_name, column_name="south_C200")
+
+    M.save(f'./data/{item}.xls')
+    M.clean()

@@ -303,9 +303,8 @@ class MikeIo(object):
             print("sheet_name: ", sheet_name)
             # print("data[sheet_name]: ", data[sheet_name])
 
-            data[sheet_name].append({'column_name':'x','column_data': self.x})
-            data[sheet_name].append({'column_name':'y','column_data': self.y})
-
+            data[sheet_name].insert(0, {'column_name':'y','column_data': self.y})
+            data[sheet_name].insert(0, {'column_name':'x','column_data': self.x})
 
             # 生成数据对象
             sheet_data = { each_column['column_name']:each_column['column_data'] for each_column in values if each_column}
@@ -325,21 +324,44 @@ class MikeIo(object):
         gdf.to_file(filename)
 
     # target1 - target2 计算差值
-    # def sub(self, target1, target2, title=""):
-    #     """
-    #     Description  计算两个数据的差值，流速差值、水位差值等计算
+    def sub(self, target1:str, target2:str, sheet_name:str, column_name:str=""):
+        """
+        Description  计算两个数据的差值，流速差值、水位差值等计算
 
-    #     - param self    :{params} {description}1
-    #     - param target1 :{params} {description}
-    #     - param target2 :{params} {description}
-    #     - param title   :{string} {description}
+        - param self    :{params} {description}1
+        - param target1 :{params} {description}
+        - param target2 :{params} {description}
+        - param title   :{string} {description}
 
-    #     returns `{}` {description}
+        returns `{}` {description}
 
-    #     """
-    #     # sub = np.round(self.result[target1] - self.result[target2], 3)
-    #     sub = []
-    #     return sub
+        """
+        tar1 = tar2 = []
+        for each_column in self.data[sheet_name]:
+            print('当前 name', each_column["column_name"])
+            print('当前 target1', target1)
+            print('当前 target2', target2)
+
+            if len(tar1) == 0 and each_column["column_name"] == target1:
+                tar1 = each_column["column_data"]
+                continue
+
+            if len(tar2) == 0 and each_column["column_name"] == target2:
+                tar2 = each_column["column_data"]
+                continue
+
+        if len(tar1) == 0: return print('没有找到target1 数据')
+        if len(tar2) == 0: return print('没有找到target2 数据')
+
+        sub = np.round(tar1 - tar2, 3)
+        sub = self.check_data(sub)
+
+        if column_name == "":
+            column_name = f'{target1}_{target2}'
+
+        self.data[sheet_name].append({ "column_data":sub,"column_name":column_name })
+
+        return sub
 
 
 
