@@ -50,19 +50,23 @@ if ( __name__ == "__main__"):
     north200 = './data/sg-north-20.xyz'
     soutu200 = './data/south200.xyz'
 
+    xyz = "./data/提取范围.xyz"
+
     tar1 = "./data/AF100.dfsu"
     tar2 = "./data/north100.dfsu"
 
 
 
-    M.set_xy(BE20)
+    M.set_xy(xyz)
     # M.read(tar1, item="Current speed", column_name='AF100', sheet_name='s1')
     # M.read(tar2, item="Current speed", column_name='north100', sheet_name='s1')
     # M.sub('north100','AF100', sheet_name="s1", column_name="north100_C")
     # M.save('./data/test.xls')
 
     sheet_name = "s1"
-    item = "Current direction"
+    # item = "Current direction"
+
+    item = "Current speed"
     p = Path('./data/')
     for each in p.glob('*.dfsu'):
         column_name,ext = path.basename(each.resolve()).split('.')
