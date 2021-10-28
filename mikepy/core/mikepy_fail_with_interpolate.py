@@ -13,14 +13,20 @@
 import time, os
 import pandas as pd
 import geopandas as gpd
+
 import numpy as np
+# import matplotlib.pyplot as plt
 
 from mikeio import Dfsu,Mesh
+# from mikeio.spatial import Grid2D
+
 from hashlib import md5
 from tempfile import TemporaryDirectory
 from shutil import copy2
 
-
+# 插值库
+from scipy.interpolate import griddata
+from pykrige import OrdinaryKriging
 
 if str(pd.__version__) != '1.3.0':
     print("本插件仅支持 pandas 1.3.0 (否则失去保存xls功能)")
@@ -47,7 +53,7 @@ class MikeIo(object):
         return f"当前已处理 {len(self.file_readed_list)} 个文件： {[*self.file_readed_list]}"
 
 
-    def read(self, filename:str, item:str="", column_name:str="", setp:int=-1, sheet_name:str="")->dict:
+    def read(self, filename:str, item:str="", column_name:str="", setp=-1, sheet_name:str="", method='cubic')->dict:
         """
         Description 获取指定类型、时间步长的对应数据
 
@@ -61,10 +67,7 @@ class MikeIo(object):
         returns `{dict}` {description}
         ```py
         {
-            sheet_name1:[
-            { "column_name":"x",  "column_data":[]}, # 每个sheet都有独立的x和y列
-            { "column_name":"y",  "column_data":[]},
-            {
+            sheet_name1:[{
                 "column_name":column_name,
                 "file_name":name,
                 "column_data":np.round(data, 3),
@@ -102,15 +105,25 @@ class MikeIo(object):
         # 如果没有指定数据列名，则采用文件名
         if column_name == "": column_name = name
 
-        # 如果当前网格未提取xy 则进行提取
-        if not sheet_name in self.data:
-            self.data[sheet_name] = []
-            element_coordinates = self.dfsu.element_coordinates
-            xyz = pd.DataFrame(self.dfsu.element_coordinates)
-            self.data[sheet_name].append({'column_name':'x','column_data': xyz[0]})# x 为第一列数据
-            self.data[sheet_name].append({'column_name':'y','column_data': xyz[1]})# y 为第二项数据
+        # 判断是否有指定xy
+        if len(self.x) == 0 or len(self.y) == 0:
+            print('当前还没定义需要输出的xy，自动采用当前文件mesh网点作为xy')
+            # 如果当前网格未提取xy 则进行提取
+            if not sheet_name in self.data:
+                self.data[sheet_name] = []
+                element_coordinates = self.dfsu.element_coordinates
+                xyz = pd.DataFrame(self.dfsu.element_coordinates)
+                self.data[sheet_name].append({'column_name':'x','column_data': xyz[0]})# x 为第一列数据
+                self.data[sheet_name].append({'column_name':'y','column_data': xyz[1]})# y 为第二项数据
 
-        # 检查一边数据，替换不合法的数据为0
+        else:
+            # 判断是否需要插值
+            if len(self.x) != len(data):
+                # 根据xy来重新插值数据
+                print("根据xy来重新插值数据: ")
+                points = self.dfsu.element_coordinates[:,0:2]
+                data = self.get_data_by_xy(self.x, self.y, points, data, method)
+
         data = self.check_data(data)
 
         self.data[sheet_name].append({
@@ -125,6 +138,30 @@ class MikeIo(object):
 
         return data
 
+    @staticmethod
+    def get_data_by_xy(x, y, points, data, method='cubic'):
+
+        interpolate_res = []
+        if method == 'Kriging':
+            # 定义数据
+            Kriging = OrdinaryKriging(points[0], points[1], data, variogram_model='gaussian', nlags=6)
+            interpolate_res, ss = Kriging.execute('grid', x, y)
+            # xgrid,ygrid = np.meshgrid(x, y)
+
+        else:
+            # 根据 x，y 生成一个矩阵容器
+            xi,yi = np.meshgrid(x, y)
+
+            # cubic 插值
+            interpolate_res = griddata(points, data, (xi,yi), method=method)
+
+        # 获取对角线索引
+        index = list(range(len(x)))
+
+        # 获取对角线数据
+        res = pd.DataFrame(interpolate_res).values[index,index]
+
+        return  res
 
     # 读取dfsu文件
     def get_dfsu_data(self, item:str, setp:int=-1):
@@ -226,6 +263,29 @@ class MikeIo(object):
 
         return self
 
+    def set_xy_by_mesh(self, dfs=None):
+        # 实例化网格
+        # 获取网格内的数据[col1, col2, col3,...]
+        if not dfs:
+            print("self.currt_file: ", self.currt_file)
+
+            self.mesh = Mesh(self.currt_file)
+            xyz = self.mesh.element_coordinates
+        else:
+            xyz = dfs.element_coordinates
+
+        # 以网格数量为基础创建一个对象，收集同一网格的所有数据
+        # sheet_name = f'mesh_{len(xyz)}'
+        data = pd.DataFrame(xyz)
+        # self.data['x'].append({'column_name':'x','column_data': data[0]})# x 为第一列数据
+        # self.data['y'].append({'column_name':'y','column_data': data[1]})# y 为第二项数据
+        self.x = data[0]
+        self.y = data[1]
+
+
+        return data
+
+
 
     # 根据后缀名，导出excel文件，支持 shp/excel/xyz
     def save(self, filename='./output.xls'):
@@ -246,8 +306,17 @@ class MikeIo(object):
         print('^.^ done！')
 
     def to_excel(self, data, filename):
+        print("self.y: ", len(self.y))
+        print("self.x: ", len(self.x))
+
         writer = pd.ExcelWriter(filename)
         for sheet_name, values in data.items():
+            print("sheet_name: ", sheet_name)
+            # print("data[sheet_name]: ", data[sheet_name])
+
+            data[sheet_name].insert(0, {'column_name':'y','column_data': self.y})
+            data[sheet_name].insert(0, {'column_name':'x','column_data': self.x})
+
             # 生成数据对象
             sheet_data = { each_column['column_name']:each_column['column_data'] for each_column in values if each_column}
 
@@ -266,7 +335,7 @@ class MikeIo(object):
         gdf.to_file(filename)
 
     # target1 - target2 计算差值
-    def sub(self, target1:str, target2:str, column_name:str=""):
+    def sub(self, target1:str, target2:str, sheet_name:str, column_name:str=""):
         """
         Description  计算两个数据的差值，流速差值、水位差值等计算
 
@@ -278,36 +347,28 @@ class MikeIo(object):
         returns `{}` {description}
 
         """
-        tar1 = []
-        tar2 = []
-        # 遍历数据，找出target1核target2的数据
-        flag = False
-        for sheet_name in self.data.keys():
-            print("sheet_name: ", sheet_name)
-            if flag : break
+        tar1 = tar2 = []
+        for each_column in self.data[sheet_name]:
+            print('当前 name', each_column["column_name"])
+            print('当前 target1', target1)
+            print('当前 target2', target2)
 
-            for each_column in self.data[sheet_name]:
-                print("column_name: ", each_column["column_name"])
+            if len(tar1) == 0 and each_column["column_name"] == target1:
+                tar1 = each_column["column_data"]
+                continue
 
-                if len(tar1) == 0 and each_column["column_name"] == target1:
-                    tar1 = each_column["column_data"]
-
-                if len(tar2) == 0 and each_column["column_name"] == target2:
-                    tar2 = each_column["column_data"]
-
-                if len(tar1) >0 and len(tar2) > 0:
-                    flag = True
-                    break
-
+            if len(tar2) == 0 and each_column["column_name"] == target2:
+                tar2 = each_column["column_data"]
+                continue
 
         if len(tar1) == 0: return print('没有找到target1 数据')
         if len(tar2) == 0: return print('没有找到target2 数据')
-        if len(tar1) != len(tar2) :return print('target1 和target2 的数量不一致，无法计算差值')
 
         sub = np.round(tar1 - tar2, 3)
         sub = self.check_data(sub)
 
-        if column_name == "": column_name = f'{target1}_{target2}'
+        if column_name == "":
+            column_name = f'{target1}_{target2}'
 
         self.data[sheet_name].append({ "column_data":sub,"column_name":column_name })
 
@@ -323,9 +384,17 @@ if ( __name__ == "__main__"):
 
     M = MikeIo()
 
-    M.read(tar1, item="Current speed")
-    M.read(tar2, item="Current speed")
-    M.sub('BE-20', 'sg-north-20')
+    # M.set_xy(xyz1)
+    # M.read(tar1)
+
+    print(type(M.x))
+    print(type(M.y))
+
+    M.read(tar1, item="Current speed", column_name='BE20_cubic')
+
+    # M.read(tar1, item="Current speed", column_name='BE20_cubic', sheet_name='s1', method='cubic')
+    # M.read(tar1, item="Current speed", column_name='BE20_linear', sheet_name='s1', method='linear')
+    # M.read(tar1, item="Current speed", column_name='BE20_nearest', sheet_name='s1', method='nearest')
 
     M.save('../data/test.xlsx')
 
