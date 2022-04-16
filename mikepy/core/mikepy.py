@@ -32,6 +32,10 @@ if str(pd.__version__) != '1.3.0':
     print("本插件仅支持 pandas 1.3.0 (否则失去保存xls功能)")
     # exit()
 
+DEBUG = True
+
+# DEBUG = False
+
 class MikeIo(object):
     def __init__(self):
         self.dfs=None
@@ -53,7 +57,7 @@ class MikeIo(object):
         return f"当前已处理 {len(self.file_list)} 个文件： {[*self.file_list]}"
 
 
-    def read(self, filename:str, item:str="", column_name:str="", setp=-1, sheet_name:str="", method='cubic')->dict:
+    def read(self, filename:str, item:str="", column_name:str="", setp=-1, sheet_name:str="", method:str='cubic')->dict:
         """
         Description 获取指定类型、时间步长的对应数据
 
@@ -63,6 +67,7 @@ class MikeIo(object):
         - param column_name :{str}    属性最终的列名
         - param setp        :{int}    需要获取的步长，默认是最后一个时间
         - param sheet_name  :{str}    数据的sheet_name，指定后
+        - param method      :{str}    插值的方法
 
         returns `{dict}` {description}
         ```py
@@ -94,6 +99,8 @@ class MikeIo(object):
 
             # 通过self.dfsu 读取数据
             data = self.get_dfsu_data(item=item, setp=setp)
+            print("data.shape: ", data.shape)
+
 
         if len(data) == 0 :
             print('data 异常')
@@ -105,13 +112,13 @@ class MikeIo(object):
             self.set_xy_by_mesh()
 
 
-        # 判断是否需要插值
-        if len(self.x) != len(data):
-            # 根据xy来重新插值数据
-            print("根据xy来重新插值数据: ")
-            points = self.dfsu.element_coordinates[:,0:2]
-            data = self.get_data_by_xy(self.x, self.y, points, data, method)
-            data = self.check_data(data)
+        # 是否需要重新重置，如果xy与数据一致，则不需要
+        # if len(self.x) != len(data):
+        #     # 根据xy来重新插值数据
+        #     print("根据xy来重新插值数据: ")
+        #     points = self.dfsu.element_coordinates[:,0:2]
+        #     data = self.get_data_by_xy(self.x, self.y, points, data, method)
+        #     data = self.check_data(data)
 
         if sheet_name == "": sheet_name = f'mesh_{len(data)}'
         if column_name == "": column_name = name
@@ -131,20 +138,22 @@ class MikeIo(object):
 
     @staticmethod
     def get_data_by_xy(x, y, points, data, method='cubic'):
+        xi,yi = np.meshgrid(x, y)
+        interpolate_res = griddata(points, data, (xi,yi), method='cubic')
 
-        interpolate_res = []
-        if method == 'Kriging':
-            # 定义数据
-            Kriging = OrdinaryKriging(points[0], points[1], data, variogram_model='gaussian', nlags=6)
-            interpolate_res, ss = Kriging.execute('grid', x, y)
-            # xgrid,ygrid = np.meshgrid(x, y)
+        # interpolate_res = []
+        # if method == 'Kriging':
+        #     # 定义数据
+        #     # Kriging = OrdinaryKriging(points[0], points[1], data, variogram_model='gaussian', nlags=6)
+        #     # interpolate_res, ss = Kriging.execute('grid', x, y)
+        #     xgrid,ygrid = np.meshgrid(x, y)
 
-        else:
-            # 根据 x，y 生成一个矩阵容器
-            xi,yi = np.meshgrid(x, y)
+        # else:
+        #     # 根据 x，y 生成一个矩阵容器
+        #     xi,yi = np.meshgrid(x, y)
 
-            # cubic 插值
-            interpolate_res = griddata(points, data, (xi,yi), method=method)
+        #     # cubic 插值
+        #     interpolate_res = griddata(points, data, (xi,yi), method=method)
 
         # 获取对角线索引
         index = list(range(len(x)))
@@ -160,14 +169,19 @@ class MikeIo(object):
         res = None
 
         if item.lower() =="current direction":
+            print(1)
             res = self.get_dfsu_direction(setp)[:]
 
         elif item.lower() =="current speed":
+            print(2)
+
             res = self.get_dfsu_speed(setp)[:]
 
         else:
+            print(3)
             res = self.dfsu.read([item])[0][setp][:]
 
+        print('res: ', res.shape)
         return self.check_data(res)
 
 
@@ -180,18 +194,30 @@ class MikeIo(object):
             v = v[setp]
             return np.mod(90 -np.rad2deg(np.arctan2(v,u)), 360)
         except KeyError:
-            return self.dfsu.read(['Current direction'])[0] * 180/3.14
+            return self.dfsu.read()['Current direction'][setp] * 180/3.14
 
     # 获取dfsu文件的流速数据
     # return {narray}
     def get_dfsu_speed(self, setp:int=-1):
+        print(123123)
+        item = 'Current speed'
         try:
             u,v = self.dfsu.read(['U velocity','V velocity'])
+            print("u: ", u.shape)
+            print("v: ", v.shape)
+
             u = u[setp]
             v = v[setp]
+
             return np.sqrt(u**2 + v**2)
+
         except KeyError:
-            return self.dfsu.read(['Current speed'])[0]
+            print('获取 U V 失败')
+            # res = self.dfsu.read(['Current speed'])[0]
+
+            res = self.dfsu.read()[item][setp]
+
+            return res
 
 
     def check_data(self, data, fix=True, tip=True):
@@ -208,12 +234,11 @@ class MikeIo(object):
         """
         name, ext = os.path.basename(self.currt_file).split('.')
         for index, each in enumerate(data):
-            if not np.isnan(each): continue
 
-            if fix : data[index] = 0
-
-            # if tip : print(f"warning >>> file：{name}.{ext}，posistion：<{ index + 1 }> has unknown value")
-            if tip : print(f"警告！ >>> 文件：{name}.{ext}，位置：<{ index + 1 }> 的数据为空值")
+            # 需要知道当前数据内是否存在 NaN 这个空值，需要填充为 0
+            if np.isnan(each).any():
+                if fix : data[index] = 0
+                if tip : print(f"警告！ >>> 文件：{name}.{ext}，位置：<{ index + 1 }> 的数据为空值")
 
         return data
 
@@ -254,7 +279,7 @@ class MikeIo(object):
 
         return self
 
-    def set_xy_by_mesh(self, dfs):
+    def set_xy_by_mesh(self, dfs=None):
         # 实例化网格
         # 获取网格内的数据[col1, col2, col3,...]
         if not dfs:
@@ -284,6 +309,9 @@ class MikeIo(object):
         output = f'{d}{os.path.sep}{name}_{int(time.time())}.{ext}'
 
         if ext == 'xls' or ext == "xlsx":
+            if DEBUG:
+                print(self.data.keys())
+
             self.to_excel(self.data, output)
         elif ext == 'shp':
             self.to_shp(self.data, output)
@@ -295,19 +323,29 @@ class MikeIo(object):
         print('^.^ done！')
 
     def to_excel(self, data, filename):
-        print("self.y: ", len(self.y))
-        print("self.x: ", len(self.x))
-
         writer = pd.ExcelWriter(filename)
+
+        # 每一个 items 对应一个 mesh 对应一个 sheet
         for sheet_name, values in data.items():
             print("sheet_name: ", sheet_name)
-            # print("data[sheet_name]: ", data[sheet_name])
+            # print(f"data[sheet_name]: ", data[sheet_name])
 
             data[sheet_name].insert(0, {'column_name':'y','column_data': self.y})
             data[sheet_name].insert(0, {'column_name':'x','column_data': self.x})
 
+
             # 生成数据对象
-            sheet_data = { each_column['column_name']:each_column['column_data'] for each_column in values if each_column}
+            sheet_data = { each_column['column_name']:each_column['column_data'] for each_column in values if each_column }
+
+            if DEBUG:
+                print("sheet_data: ", sheet_data.keys())
+                # print("sheet_data: ", sheet_data)
+                # print("sheet_data: ", sheet_data['x'])
+
+
+            test_data = {
+                'af2':sheet_data['af2'],
+            }
 
             # 根据数据的key 保证相同网格数据保存在同一sheet_name
             pd.DataFrame(sheet_data).to_excel(writer, index=False, sheet_name=sheet_name)
@@ -366,22 +404,24 @@ class MikeIo(object):
 
 
 if ( __name__ == "__main__"):
-    tar1 = '../data/BE-20.dfsu'
-    tar2 = '../data/sg-north-20.dfsu'
-    xyz1 = r'../data/BE-20.xyz'
-    xyz2 = r'../data/sg-north-20.xyz'
+    tar1 = r'../data/2%-af.dfsu'
+    tar2 = r'../data/2%-be.dfsu'
+    xyz1 = r'../data/xy.xyz'
 
     M = MikeIo()
-
-    M.set_xy(xyz1)
+    # M.set_xy(xyz1)
     # M.read(tar1)
 
     print(type(M.x))
     print(type(M.y))
+    # M.read(tar1, item="Current speed", column_name=r'2%-af', sheet_name='s1',  method='cubic')
+    M.read(tar2, item="Current speed", column_name=r'2%-be', sheet_name='s1', method='cubic')
 
     # M.read(tar1, item="Current speed", column_name='BE20_cubic', sheet_name='s1', method='cubic')
     # M.read(tar1, item="Current speed", column_name='BE20_linear', sheet_name='s1', method='linear')
     # M.read(tar1, item="Current speed", column_name='BE20_nearest', sheet_name='s1', method='nearest')
 
-    # M.save('../data/test.xlsx')
+    # M.sub(r'2%-af',r'2%-be', sheet_name='s1', column_name="C2")
+
+    M.save('../data/test.xlsx')
 

@@ -15,9 +15,12 @@
 @set "userName=%COMPUTERNAME%"
 
 @:: surface pro7
-@if "%COMPUTERNAME%" == "DESKTOP-49G127I" (@set "notebook=D:\CPS\python\Python375_64\Scripts\jupyter-notebook.exe")
+@if "%COMPUTERNAME%" == "DESKTOP-49G127I" (@set "notebook=W:\CPS\python\Python375_64\Scripts\jupyter-notebook.exe")
 
 @:: home-pc
+@if "%COMPUTERNAME%" == "home" (@set "notebook=Z:\CPS\python\Python375_64\Scripts\jupyter-notebook.exe")
+
+@:: office
 @if "%COMPUTERNAME%" == "home" (@set "notebook=Z:\CPS\python\Python375_64\Scripts\jupyter-notebook.exe")
 
 @%notebook% %~dp0 --NotebookApp.port=4444 --NotebookApp.ip=* --NotebookApp.token=''
