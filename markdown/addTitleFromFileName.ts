@@ -15,6 +15,16 @@ import path from 'path';
 import { glob, IOptions } from 'glob';
 import { cursorTo } from 'readline';
 
+/**
+ * @Description - {description}
+ *
+ * @param {number} currtDeep=0  - {description}
+ * @param {number} maxDeep=100  - {description}
+ * @param {string} dirPath      - {description}
+ *
+ * @returns {} - {description}
+ *
+ */
 async function walk({
   dirPath,
   currtDeep = 0,
@@ -60,7 +70,10 @@ async function main() {
     console.log(files.length);
 
     files.forEach(async (mdFilePath: string) => {
-      const res = await fsp.readFile(mdFilePath, { encoding: 'utf8', flag: 'r' });
+      const res = await fsp.readFile(mdFilePath, {
+        encoding: 'utf8',
+        flag: 'r',
+      });
 
       const basename = path.basename(mdFilePath, '.md');
       const title = `# ${basename}`;
