@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "cps-scripts"
+version = "0.1.0"
+description = ""
+authors = ["cpasion-office-win10 <373704015@qq.com>"]
+readme = "README.md"
+packages = [{include = "cps_scripts"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^1.10.5"
+borb = "^2.1.9"
+PyMuPDF = "^1.21.1"
+
+[virtualenvs]
+create = true       # 始终使用虚拟环境
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
