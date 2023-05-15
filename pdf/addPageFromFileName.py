@@ -7,7 +7,7 @@
 # @Last Modified time: 2023-02-24 10:53:22.189861
 # @file_path "W:\CPS\IDE\SublimeText\JS_SublmieText\Data\Packages\cps-fileheader"
 # @Filename "main.py"
-# @Description: 功能描述
+# @Description: 通过文件名生成pdf封面
 #
 import os, sys, json
 
